@@ -1,5 +1,6 @@
 import os
 import logging
+import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application,
@@ -206,7 +207,8 @@ async def execute_custom_generation(update: Update, context: ContextTypes.DEFAUL
     ]
     await query.edit_message_text(response, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard))
 
-def main():
+async def main_async():
+    """Asynchronous orchestrator initializing the framework cleanly under Python 3.14+."""
     if not BOT_TOKEN:
         logger.error("Missing BOT_TOKEN environment variable.")
         return
@@ -219,7 +221,8 @@ def main():
         states={
             CHOOSING_LENGTH: [MessageHandler(filters.TEXT & ~filters.COMMAND, process_custom_length)]
         },
-        fallbacks=[CommandHandler("start", start)]
+        fallbacks=[CommandHandler("start", start)],
+        per_message=True
     )
 
     # Core commands handlers
@@ -237,8 +240,26 @@ def main():
     application.add_handler(CallbackQueryHandler(execute_custom_generation, pattern="^gen_custom_exec$"))
 
     logger.info("SafeKey Bot initialized successfully. Polling activated...")
-    application.run_polling()
+    
+    # Explicitly boot framework loops for production compliance
+    await application.initialize()
+    await application.start()
+    await application.updater.start_polling()
+    
+    try:
+        while True:
+            await asyncio.sleep(3600)
+    except (KeyboardInterrupt, SystemExit):
+        await application.updater.stop()
+        await application.stop()
+        await application.shutdown()
+
+def main():
+    """Synchronous framework initialisation wrapping modern async runtimes."""
+    try:
+        asyncio.run(main_async())
+    except Exception as e:
+        logger.critical(f"Bot execution loop crashed: {e}")
 
 if __name__ == "__main__":
     main()
-
