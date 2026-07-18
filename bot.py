@@ -29,6 +29,7 @@ CHOOSING_LENGTH = 1
 
 def get_main_menu_keyboard():
     keyboard = [
+        [InlineKeyboardButton("📈 Join Channel", url="https://t.me/binary_killer2")],
         [InlineKeyboardButton("🔐 Generate Password", callback_data="gen_default")],
         [InlineKeyboardButton("⚙️ Custom Password", callback_data="gen_custom_init")],
         [
@@ -39,19 +40,15 @@ def get_main_menu_keyboard():
     return InlineKeyboardMarkup(keyboard)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Sends the professional welcome message with interactive menu."""
+    """Sends the promotional welcome message with interactive menu."""
     welcome_text = (
-        "👋 **Welcome to SafeKey Bot!**\n\n"
-        "Generate strong, secure passwords in seconds.\n\n"
-        "🔐 Create random passwords\n"
-        "⚙️ Customize password length and character types\n"
-        "🛡️ Improve your online security\n\n"
-        "Choose an option below to get started."
+        "This channel will be helpful for you to achieve your dream profit everyday "
+        "with low risk and make you an absolute trader with the indicator."
     )
     if update.message:
-        await update.message.reply_text(welcome_text, parse_mode="Markdown", reply_markup=get_main_menu_keyboard())
+        await update.message.reply_text(welcome_text, reply_markup=get_main_menu_keyboard())
     elif update.callback_query:
-        await update.callback_query.edit_message_text(welcome_text, parse_mode="Markdown", reply_markup=get_main_menu_keyboard())
+        await update.callback_query.edit_message_text(welcome_text, reply_markup=get_main_menu_keyboard())
     return ConversationHandler.END
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -263,3 +260,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
