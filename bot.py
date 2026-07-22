@@ -1,7 +1,7 @@
 import os
 import logging
 import asyncio
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -20,23 +20,58 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def get_main_menu_keyboard():
-    """Returns a keyboard with only the channel redirect link."""
+# List of image URLs or file paths on your hosting server/environment
+# Replace these strings with your actual image paths or Telegram file IDs
+PROOF_IMAGES = [
+    "path/to/image1.jpg", # 1000222515.jpg
+    "path/to/image2.jpg", # 1000222518.jpg
+    "path/to/image3.jpg", # 1000222521.jpg
+    "path/to/image4.jpg", # 1000222524.jpg
+    "path/to/image5.jpg"  # 1000222527.jpg
+]
+
+def get_channel_keyboard():
+    """Returns a keyboard with only the call-to-action channel redirect link."""
     keyboard = [
-        [InlineKeyboardButton("Join Our Telegram Channel", url="https://t.me/binary_killer2")]
+        [InlineKeyboardButton("👉 Join Our Telegram Channel 🚀", url="https://t.me/binary_killer2")]
     ]
     return InlineKeyboardMarkup(keyboard)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Sends the channel promotion message with the single redirect button."""
-    welcome_text = (
-        "This channel will be helpful for you to achieve your dream profit everyday "
-        "with low risk and make you an absolute trader with the indicator."
+    """Sends proof images first, followed by a persuasive text funnel to join the channel."""
+    chat_id = update.effective_chat.id
+
+    # 1. Send the proof images as an album first if files are configured
+    media_group = []
+    for img in PROOF_IMAGES:
+        if os.path.exists(img) or img.startswith("http") or img.isalnum(): # supports local path, url, or file_id
+            media_group.append(InputMediaPhoto(media=img))
+            
+    if media_group:
+        try:
+            await context.bot.send_media_group(chat_id=chat_id, media=media_group)
+        except Exception as e:
+            logger.error(f"Failed to send proof images: {e}")
+
+    # 2. Persuasive and meaningful conversion text
+    convincing_text = (
+        "📈 **Stop Gambling. Start Trading with Absolute Precision!**\n\n"
+        "The results speak for themselves! Real traders are tripling their accounts and clearing "
+        "thousands of dollars daily using our elite, low-risk indicators. This channel is specifically "
+        "designed to help you secure consistent, daily profits while managing your risks perfectly.\n\n"
+        "Whether you want to escape the cycle of losses or scale your trading account to the next level, "
+        "we provide the direct setups, indicator alerts, and expert guidance to make you an absolute master "
+        "of the market.\n\n"
+        "👇 **Don't miss the next winning run. Click below to secure your access now!**"
     )
-    if update.message:
-        await update.message.reply_text(welcome_text, reply_markup=get_main_menu_keyboard())
-    elif update.callback_query:
-        await update.callback_query.edit_message_text(welcome_text, reply_markup=get_main_menu_keyboard())
+
+    # 3. Deliver the message accompanied by the inline conversion button
+    await context.bot.send_message(
+        chat_id=chat_id, 
+        text=convincing_text, 
+        parse_mode="Markdown", 
+        reply_markup=get_channel_keyboard()
+    )
 
 async def main_async():
     """Asynchronous orchestrator initializing the framework cleanly."""
@@ -46,15 +81,12 @@ async def main_async():
 
     application = Application.builder().token(BOT_TOKEN).build()
 
-    # Core command handler
+    # Core redirection flow
     application.add_handler(CommandHandler("start", start))
-    
-    # Fallback to handle any random menu callbacks gracefully if users click old message remnants
     application.add_handler(CallbackQueryHandler(start))
 
-    logger.info("SafeKey Bot initialized successfully. Polling activated...")
+    logger.info("Redirect Bot initialized successfully. Polling activated...")
     
-    # Explicitly boot framework loops for production compliance
     await application.initialize()
     await application.start()
     await application.updater.start_polling()
@@ -76,4 +108,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
