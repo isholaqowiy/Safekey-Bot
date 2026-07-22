@@ -1,7 +1,7 @@
 import os
 import logging
 import asyncio
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -37,36 +37,23 @@ def get_channel_keyboard():
     return InlineKeyboardMarkup(keyboard)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Sends proof images first, followed by a persuasive text funnel to join the channel."""
+    """Sends proof images one by one, followed by a persuasive text funnel to join the channel."""
     chat_id = update.effective_chat.id
 
-    media_group = []
-    opened_files = []
-
-    # 1. Safely open each local image file in binary read mode ('rb')
+    # 1. Loop through and send each image individually
     for filename in PROOF_IMAGE_FILES:
         if os.path.exists(filename):
             try:
-                f = open(filename, "rb")
-                opened_files.append(f)
-                media_group.append(InputMediaPhoto(media=f))
+                with open(filename, "rb") as f:
+                    await context.bot.send_photo(chat_id=chat_id, photo=f)
+                # Small delay to keep things clean and sequential in the chat
+                await asyncio.sleep(0.5)
             except Exception as file_err:
-                logger.error(f"Could not read image file {filename}: {file_err}")
+                logger.error(f"Could not send image file {filename}: {file_err}")
         else:
             logger.warning(f"Image file not found in directory: {filename}")
-            
-    # 2. Upload the album to Telegram if files were successfully found and opened
-    if media_group:
-        try:
-            await context.bot.send_media_group(chat_id=chat_id, media=media_group)
-        except Exception as e:
-            logger.error(f"Failed to send proof images album: {e}")
-        finally:
-            # Always close file streams after sending to prevent memory leaks
-            for f in opened_files:
-                f.close()
 
-    # 3. Persuasive conversion text
+    # 2. Persuasive conversion text
     convincing_text = (
         "📈 **Stop Gambling. Start Trading with Absolute Precision!**\n\n"
         "The results speak for themselves! Real traders are tripling their accounts and clearing "
@@ -78,7 +65,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "👇 **Don't miss the next winning run. Click below to secure your access now!**"
     )
 
-    # 4. Deliver the text message accompanied by the inline redirect button
+    # 3. Deliver the text message accompanied by the inline redirect button
     await context.bot.send_message(
         chat_id=chat_id, 
         text=convincing_text, 
