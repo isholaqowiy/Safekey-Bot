@@ -20,7 +20,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Updated to match your exact filenames on GitHub
+# Match your exact filenames on GitHub
 PROOF_IMAGE_FILES = [
     "IMG-20260721-WA0031.jpg",
     "IMG-20260721-WA0033.jpg",
@@ -50,7 +50,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 f = open(filename, "rb")
                 opened_files.append(f)
                 media_group.append(InputMediaPhoto(media=f))
-            except Exception file_err:
+            except Exception as file_err:
                 logger.error(f"Could not read image file {filename}: {file_err}")
         else:
             logger.warning(f"Image file not found in directory: {filename}")
