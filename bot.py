@@ -20,13 +20,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Define the exact names of your image files placed in the same folder as bot.py
+# Updated to match your exact filenames on GitHub
 PROOF_IMAGE_FILES = [
-    "proof1.jpg",
-    "proof2.jpg",
-    "proof3.jpg",
-    "proof4.jpg",
-    "proof5.jpg"
+    "IMG-20260721-WA0031.jpg",
+    "IMG-20260721-WA0033.jpg",
+    "IMG-20260721-WA0034.jpg",
+    "IMG-20260721-WA0035.jpg",
+    "IMG-20260721-WA0036.jpg"
 ]
 
 def get_channel_keyboard():
@@ -50,7 +50,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 f = open(filename, "rb")
                 opened_files.append(f)
                 media_group.append(InputMediaPhoto(media=f))
-            except Exception as file_err:
+            except Exception file_err:
                 logger.error(f"Could not read image file {filename}: {file_err}")
         else:
             logger.warning(f"Image file not found in directory: {filename}")
@@ -121,3 +121,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
