@@ -20,14 +20,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# List of image URLs or file paths on your hosting server/environment
-# Replace these strings with your actual image paths or Telegram file IDs
-PROOF_IMAGES = [
-    "path/to/image1.jpg", # 1000222515.jpg
-    "path/to/image2.jpg", # 1000222518.jpg
-    "path/to/image3.jpg", # 1000222521.jpg
-    "path/to/image4.jpg", # 1000222524.jpg
-    "path/to/image5.jpg"  # 1000222527.jpg
+# Define the exact names of your image files placed in the same folder as bot.py
+PROOF_IMAGE_FILES = [
+    "proof1.jpg",
+    "proof2.jpg",
+    "proof3.jpg",
+    "proof4.jpg",
+    "proof5.jpg"
 ]
 
 def get_channel_keyboard():
@@ -41,19 +40,33 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Sends proof images first, followed by a persuasive text funnel to join the channel."""
     chat_id = update.effective_chat.id
 
-    # 1. Send the proof images as an album first if files are configured
     media_group = []
-    for img in PROOF_IMAGES:
-        if os.path.exists(img) or img.startswith("http") or img.isalnum(): # supports local path, url, or file_id
-            media_group.append(InputMediaPhoto(media=img))
+    opened_files = []
+
+    # 1. Safely open each local image file in binary read mode ('rb')
+    for filename in PROOF_IMAGE_FILES:
+        if os.path.exists(filename):
+            try:
+                f = open(filename, "rb")
+                opened_files.append(f)
+                media_group.append(InputMediaPhoto(media=f))
+            except Exception as file_err:
+                logger.error(f"Could not read image file {filename}: {file_err}")
+        else:
+            logger.warning(f"Image file not found in directory: {filename}")
             
+    # 2. Upload the album to Telegram if files were successfully found and opened
     if media_group:
         try:
             await context.bot.send_media_group(chat_id=chat_id, media=media_group)
         except Exception as e:
-            logger.error(f"Failed to send proof images: {e}")
+            logger.error(f"Failed to send proof images album: {e}")
+        finally:
+            # Always close file streams after sending to prevent memory leaks
+            for f in opened_files:
+                f.close()
 
-    # 2. Persuasive and meaningful conversion text
+    # 3. Persuasive conversion text
     convincing_text = (
         "📈 **Stop Gambling. Start Trading with Absolute Precision!**\n\n"
         "The results speak for themselves! Real traders are tripling their accounts and clearing "
@@ -65,7 +78,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "👇 **Don't miss the next winning run. Click below to secure your access now!**"
     )
 
-    # 3. Deliver the message accompanied by the inline conversion button
+    # 4. Deliver the text message accompanied by the inline redirect button
     await context.bot.send_message(
         chat_id=chat_id, 
         text=convincing_text, 
